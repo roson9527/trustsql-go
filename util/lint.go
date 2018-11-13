@@ -12,6 +12,7 @@ import (
 )
 
 func Lint(ety interface{}) (string, error) {
+
 	signMap := make(map[string]string)
 
 	err := checkString(&signMap, reflect.ValueOf(ety))
