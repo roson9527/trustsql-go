@@ -10,7 +10,12 @@ func BytesToString(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func StringToBytes(str string) ([]byte, error) {
+func StringToBytes(str string) []byte {
+	ret, _ := base64.StdEncoding.DecodeString(str)
+	return ret
+}
+
+func UnSafeStringToBytes(str string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(str)
 }
 
@@ -43,7 +48,7 @@ func (s *Signer) PrivateKeyStr() string {
 	return base64.StdEncoding.EncodeToString(s.PrivateKeyBytes)
 }
 
-func (s *Signer) Address() string {
+func (s *Signer) Account() string {
 	addr, _ := GenerateAddrByPubKey(s.PublicKeyBytes)
 	return addr
 }

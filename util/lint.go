@@ -24,20 +24,38 @@ func Lint(ety interface{}) (string, error) {
 }
 
 func checkString(m *map[string]string, v reflect.Value) error {
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
 	for i := 0; i < v.NumField(); i += 1 {
 		tagAttr := v.Type().Field(i).Tag.Get("json")
-		tag := strings.Split(tagAttr, ",")[0]
+		tags := strings.Split(tagAttr, ",")
 
-		if "sign" == tag {
-			continue
+		tag := tags[0]
+		// 防止打包有omitempty属性的空字段，造成签名错误
+		omitempty := false
+		if len(tags) >= 2 {
+			omitempty = tags[len(tags)-1] == "omitempty"
 		}
+
+		//if "sign" == tag {
+		//	continue
+		//}
 
 		switch v.Field(i).Kind() {
 		case reflect.Uint64:
-			(*m)[tag] = strconv.FormatUint(v.Field(i).Interface().(uint64), 10)
+			val := strconv.FormatUint(v.Field(i).Interface().(uint64), 10)
+			if omitempty && val == "0" {
+				continue
+			}
+			(*m)[tag] = val
 
 		case reflect.Uint:
 			(*m)[tag] = strconv.FormatUint(uint64(v.Field(i).Interface().(uint)), 10)
+
+		case reflect.Uint32:
+			(*m)[tag] = strconv.FormatUint(uint64(v.Field(i).Interface().(uint32)), 10)
 
 		case reflect.Int64:
 			(*m)[tag] = strconv.FormatInt(v.Field(i).Interface().(int64), 10)
@@ -51,6 +69,16 @@ func checkString(m *map[string]string, v reflect.Value) error {
 
 			}
 			value, err := json.Marshal(mapField)
+			if err != nil {
+				return err
+			}
+			(*m)[tag] = string(value)
+		case reflect.Interface, reflect.Slice:
+			if v.Field(i).IsNil() {
+				continue
+			}
+			field := v.Field(i).Interface().(interface{})
+			value, err := json.Marshal(field)
 			if err != nil {
 				return err
 			}
@@ -70,6 +98,12 @@ func checkString(m *map[string]string, v reflect.Value) error {
 				}
 				(*m)[tag] = string(b)
 			}
+		case reflect.String:
+			val := v.Field(i).Interface().(string)
+			if omitempty && len(val) == 0 {
+				continue
+			}
+			(*m)[tag] = val
 		default:
 			(*m)[tag] = v.Field(i).Interface().(string)
 		}

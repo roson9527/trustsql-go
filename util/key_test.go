@@ -9,7 +9,7 @@ import (
 var pubKey = "Ar275qWzKyJMy+wnCQBDCz11gduAweRJUsyoxnRsFXuA"
 
 func TestGenerateAddrByPubKey(t *testing.T) {
-	pubBytes, _ := StringToBytes(pubKey)
+	pubBytes := StringToBytes(pubKey)
 	ret, _ := GenerateAddrByPubKey(pubBytes)
 	assert.Equal(t, ret, string(tscec.GenerateAddrByPubkey(pubBytes)), "then should be eq")
 }
